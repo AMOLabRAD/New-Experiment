@@ -314,6 +314,7 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
             removeAction = menu.addAction("Remove")
             toggleAction = menu.addAction("Toggle Points")
             parametersAction = menu.addAction("Parameters")
+            wikiAction = menu.addAction("Send to Wiki")
             action = menu.exec_(self.mapToGlobal(pos))
             if action == fitAction:
     #                print self.count()
@@ -330,7 +331,8 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
             elif action == parametersAction:
                 dataset, directory,index = self.parent.datasetCheckboxesItems[item]
                 self.parent.newParameterWindow(dataset, directory)
-
+            elif action == wikiAction:
+                self.addToWiki()
     
     def removeItem(self, item, pos):
         itemNumberToRemove = self.parent.itemDatasetCheckboxPositionDict[self.itemAt(pos)]
@@ -370,4 +372,5 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
             self.analysisWindows[dataset, directory, index].combo.setCurrentIndex(self.analysisWindows[dataset, directory, index].curveComboIndexDict[curveName])
             self.analysisWindows[dataset, directory, index].onActivated()
             self.analysisWindows[dataset, directory, index].fitCurves(parameters)
-        
+    def addToWiki(self):
+            print 'do something to wiki'
