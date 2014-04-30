@@ -97,7 +97,7 @@ class CONNECTIONS(QtGui.QGraphicsObject):
             self.retryLabradConnectDialog.close()
         except AttributeError:
             pass
-        self.cxn = yield connectAsync()
+        self.cxn = yield connectAsync(name='PyGrapherLive')
         self.attemptDataVaultConnect()
 
     @inlineCallbacks

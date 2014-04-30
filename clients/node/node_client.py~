@@ -5,14 +5,14 @@ import time
 
 #connect to LabRAD
 try:
-    cxn = labrad.connect()
+    cxn = labrad.connect(name='Node Client')
 except:
     print 'Please start LabRAD Manager'
     time.sleep(10)
     raise()
 
 nodeDict = {
-            'node dellxps':
+            'node tony-dell':
                 ['Data Vault','WikiServer'],
     }
 

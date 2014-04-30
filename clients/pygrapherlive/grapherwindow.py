@@ -8,6 +8,7 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as Naviga
 from datavault import DataVaultWidget
 from analysis import AnalysisWidget
 from analysiswindow import AnalysisWindow
+from plotdataforwiki import plotwikidata
 import time
 from twisted.internet.defer import inlineCallbacks, returnValue
 
@@ -332,7 +333,8 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
                 dataset, directory,index = self.parent.datasetCheckboxesItems[item]
                 self.parent.newParameterWindow(dataset, directory)
             elif action == wikiAction:
-                self.addToWiki()
+                dataset, directory,index = self.parent.datasetCheckboxesItems[item]
+                self.addToWiki(dataset, directory)
     
     def removeItem(self, item, pos):
         itemNumberToRemove = self.parent.itemDatasetCheckboxPositionDict[self.itemAt(pos)]
@@ -372,5 +374,5 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
             self.analysisWindows[dataset, directory, index].combo.setCurrentIndex(self.analysisWindows[dataset, directory, index].curveComboIndexDict[curveName])
             self.analysisWindows[dataset, directory, index].onActivated()
             self.analysisWindows[dataset, directory, index].fitCurves(parameters)
-    def addToWiki(self):
-            print 'do something to wiki'
+    def addToWiki(self, dataset, directory):
+            self.plotwikidata = plotwikidata(dataset, directory)

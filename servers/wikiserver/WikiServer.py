@@ -1,7 +1,7 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = WikiServer
+name = Wiki Server
 version = 1.0
 description = 
 instancename = WikiServer
@@ -18,6 +18,7 @@ timeout = 20
 
 import os, re, sys
 import labrad
+import datetime
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
@@ -36,14 +37,14 @@ class WikiServer(LabradServer):
             try:
                 print 'Could not load repository location from registry.'
                 print 'Please enter Wiki directory or hit enter to use the current directory:'
-                DATADIR = raw_input( '>>>' )
-                if DATADIR == '':
-                    DATADIR = os.path.join( os.path.split( __file__ )[0], '__data__' )
-                if not os.path.exists( DATADIR ):
-                    os.makedirs( DATADIR )
+                WIKIDIR = raw_input( '>>>' )
+                if WIKIDIR == '':
+                    WIKIDIR = os.path.join( os.path.split( __file__ )[0], '__wiki__' )
+                if not os.path.exists( WIKIDIR ):
+                    os.makedirs( WIKIDIR )
                 # set as default and for this node
-                print DATADIR, "is being used",
-                print "as the data location."
+                print WIKIDIR, "is being used",
+                print "as the wiki location."
                 print "To permanently set this, stop this server,"
                 print "edit the registry keys"
                 print "and then restart."
@@ -55,23 +56,54 @@ class WikiServer(LabradServer):
                 raw_input()
                 sys.exit()
         self.maindir = yield self.client.registry.get('wikipath')
-        self.maindir = self.maindir[0] + '/'
+        self.maindir = self.maindir[0]
+        self.homefile = self.maindir + '/Wiki-Log.md'
 
-    @setting(21, 'Update Wiki', sourcefile='s', destinationfile='s', returns='')
-    def update_wiki(self, c, sourcefile, destinationfile):
-        yield os.system("cp " + (self.datadir + sourcefile).replace(" ","\ ") + " " + (self.maindir + self.wikidir + destinationfile).replace(" ","\ "))
-        yield os.chdir(self.maindir)
-        print os.getcwd()
-        yield os.system("bash updatewiki.sh")
+    @setting(21, 'Update Wiki', returns='')
+    def update_wiki(self, c ):
         
-    @setting(22, 'Add wiki directory', wikidir='s',returns='')    
-    def set_wiki_dir(self, c, wikidir):
-        self.wikidir = wikidir 
-     
-    @setting(23, 'Add data directory', datadir='s',returns='')    
-    def set_data_dir(self, c, datadir):
-        self.datadir = datadir + '/'
+        yield os.chdir(self.maindir)
+        yield os.system("git add -A")
+        yield os.system('git commit -am "added line from wiki server"')
 
+    @setting(22,'Add line to file', line='s', returns='')
+    def add_line(self, c, line):
+        
+        self.date = datetime.datetime.now()
+        
+        self.year = self.date.strftime("%G") 
+        self.yearfile = self.year + '.md' 
+        
+        self.month = self.date.strftime("%B")
+        self.monthfile = self.month + ' ' + self.year + '.md'
+        
+        if os.path.isfile(self.yearfile) and os.path.isfile(self.monthfile):   
+            
+            self.prepend(self.monthfile, line)
+            
+        elif os.path.isfile(self.yearfile):
+            self.prepend(self.yearfile, '[[' + self.month + ']]')
+            yield open(self.monthfile, 'a').close()
+            self.prepend(self.monthfile, line)
+            
+        else:
+            
+            self.prepend(self.homefile, '[[' + self.year + ']]')
+            yield open(self.yearfile, 'a').close()
+            self.prepend(self.yearfile, '[[' + self.month + ' ' + self.year + ']]')
+            yield open(self.monthfile, 'a').close()
+            self.prepend(self.monthfile, line)
+            
+            
+    @inlineCallbacks    
+    def prepend(self, document, line):
+            self.original = yield open(document, 'r')
+            self.oldfile = yield self.original.read()
+            self.original.close()
+            self.newfile = yield open(document, 'w') 
+            self.newfile.write(line + '\n\n' + self.oldfile)
+            yield self.newfile.flush()
+            yield self.newfile.close()
 
 if __name__ == "__main__":
     from labrad import util
