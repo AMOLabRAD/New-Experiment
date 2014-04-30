@@ -58,12 +58,12 @@ class WikiServer(LabradServer):
         self.maindir = yield self.client.registry.get('wikipath')
         self.maindir = self.maindir[0]
         self.homefile = self.maindir + '/Wiki-Log.md'
+        yield os.chdir(self.maindir)
 
     @setting(21, 'Update Wiki', returns='')
     def update_wiki(self, c ):
-        
-        yield os.chdir(self.maindir)
-        yield os.system("git add -A")
+
+        yield os.system("git add . -A")
         yield os.system('git commit -am "added line from wiki server"')
 
     @setting(22,'Add line to file', line='s', returns='')
