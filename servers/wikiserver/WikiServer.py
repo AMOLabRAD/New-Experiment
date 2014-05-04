@@ -55,9 +55,11 @@ class WikiServer(LabradServer):
                 print "Press [Enter] to continue..."
                 raw_input()
                 sys.exit()
-        self.maindir = yield self.client.registry.get('wikipath')
-        self.maindir = self.maindir[0]
-        self.homefile = self.maindir + '/Wiki-Log.md'
+        self.experiment, self.maindir = yield self.client.registry.get('wikipath')
+        self.experimentfile = self.maindir + '/' + self.experiment + 'Logbook.md'
+        if not os.path.isfile(self.experimentfile):
+            yield open(self.experimentfile, 'a').close()
+            
         yield os.chdir(self.maindir)
 
     @setting(21, 'Update Wiki', returns='')
@@ -82,13 +84,13 @@ class WikiServer(LabradServer):
             self.prepend(self.monthfile, line)
             
         elif os.path.isfile(self.yearfile):
-            self.prepend(self.yearfile, '[[' + self.month + ']]')
+            self.prepend(self.yearfile, '[[' + self.month + ' ' +  self.year + ']]')
             yield open(self.monthfile, 'a').close()
             self.prepend(self.monthfile, line)
             
         else:
             
-            self.prepend(self.homefile, '[[' + self.year + ']]')
+            self.prepend(self.experimentfile, '[[' + self.year + ']]')
             yield open(self.yearfile, 'a').close()
             self.prepend(self.yearfile, '[[' + self.month + ' ' + self.year + ']]')
             yield open(self.monthfile, 'a').close()

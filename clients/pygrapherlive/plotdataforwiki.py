@@ -7,15 +7,15 @@ from numpy import array
 from twisted.internet.defer import inlineCallbacks
 
 class plotwikidata(QtGui.QWidget):
-            
+    
     def __init__(self, data, datadir, parent=None):
         QtGui.QWidget.__init__(self)
         self.setWindowTitle('Wiki Client')
         self.datadir = datadir
         self.data = data
         self.timetag = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.labels =['Title', 'X_scale_min','X_scale_max','Y_scale_min',
-                       'Y_scale_max','X_label','Y_label']
+        self.labels =['Title', 'x min','x max','y min',
+                       'y max','x label','y label']
         self.xlabel = ''
         self.ylabel = ''
         self.title  = ''
@@ -28,33 +28,33 @@ class plotwikidata(QtGui.QWidget):
         self.dv = yield self.cxn.data_vault
         self.ws = yield self.cxn.wikiserver
         yield self.cxn.registry.cd(['','Servers', 'wikiserver'])
-        self.maindir = yield self.cxn.registry.get('wikipath')
-        self.maindir = self.maindir[0] + '/'
+        self.wikikey = yield self.cxn.registry.get('wikipath')
+        self.maindir = self.wikikey[1] + '/'
         yield os.chdir(self.maindir)
         self.setupWidget()
         
     def setupWidget(self):
-        self.setGeometry(300, 300, 500, 150)
+        self.setGeometry(300, 300, 750, 300)
         self.grid = QtGui.QGridLayout()
         self.grid.setSpacing(5)
         self.labeldict = {}
         for i, label in enumerate(self.labels):
             self.labeldict[label] = QtGui.QLabel(self)
             self.labeldict[label].setText(label)
-            self.grid.addWidget(self.labeldict[label]     ,i,0)
+            self.grid.addWidget(self.labeldict[label]     ,0,i)
         
         self.textdict = {}    
         for i, label in enumerate(self.labels):
             self.textdict[label] = QtGui.QLineEdit(self)
-            self.grid.addWidget(self.textdict[label]      ,i,1)
+            self.grid.addWidget(self.textdict[label]      ,1,i)
         
         self.commentbox = QtGui.QPlainTextEdit(self)
         
         self.gobutton = QtGui.QPushButton('GO!',self) 
         self.gobutton.clicked.connect(self.onbuttonpress)
         
-        self.grid.addWidget(self.gobutton      ,1,2)
-        self.grid.addWidget(self.commentbox    ,0,2)
+        self.grid.addWidget(self.gobutton      ,0,7,2,2)
+        self.grid.addWidget(self.commentbox    ,2,0,2,7)
         self.setLayout(self.grid)
         self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         self.setWindowTitle("Plot data for Wiki")
@@ -63,19 +63,19 @@ class plotwikidata(QtGui.QWidget):
     def onbuttonpress(self):
         
         self.title     = self.textdict['Title'].text()
-        self.xscalemin = self.textdict['X_scale_min'].text() 
-        self.xscalemax = self.textdict['X_scale_max'].text()
+        self.xscalemin = self.textdict['x min'].text() 
+        self.xscalemax = self.textdict['x max'].text()
         try:
             self.xlims = [float(self.xscalemin),float(self.xscalemax)]
         except: self.xlims = None
-        self.yscalemin = self.textdict['Y_scale_min'].text()
-        self.yscalemax = self.textdict['Y_scale_max'].text()
+        self.yscalemin = self.textdict['y min'].text()
+        self.yscalemax = self.textdict['y max'].text()
         try:
             self.ylims = [float(self.yscalemin),float(self.yscalemax)]
         except:
             self.ylims = None
-        self.xlabel= self.textdict['X_label'].text()
-        self.ylabel= self.textdict['Y_label'].text()
+        self.xlabel= self.textdict['x label'].text()
+        self.ylabel= self.textdict['y label'].text()
         self.comments = self.commentbox.toPlainText().split('/n')
         self.comments = str(self.comments[0])
         self.get_data()
@@ -101,23 +101,6 @@ class plotwikidata(QtGui.QWidget):
         plt.savefig(self.timetag)
         plt.show()
         yield self.ws.add_line_to_file( self.comments)
-        print 'sent comments'
         yield self.ws.add_line_to_file( self.timetag + '[[' + self.timetag + '.png]]')
         yield self.ws.update_wiki()
         self.close()
-#         if dirofcurrentday does not exist:
-#             self.ws.adddir('current time')
-#             self.saveplotindir
-#             self.ws.addline('include file')
-#         else:
-#             self.saveplotindir
-#             self.ws.addline('include file')
-#         self.
-#         self.fig = plt.figure()
-#         self.ax = self.fig.add_subplot(111)
-#         self.ax.set_title(self.title)
-#         self.ax.plot(dataarray)
- #       self.ax.set_xlabel(self.xlabel + ' (' + self.xunits +')')
- #       self.ax.set_ylabel(self.ylabel + ' (' + self.yunits +')')
-        
-        
