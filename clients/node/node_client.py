@@ -13,7 +13,7 @@ except:
 
 nodeDict = {
             'node tony-dell':
-                ['Data Vault','Wiki Server'],
+                ['Data Vault'],
     }
 
 for node in nodeDict.keys(): #sets the order of opening
